@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>io.esaurus</groupId>
+  <artifactId>io.esaurus</artifactId>
+  <packaging>pom</packaging>
+  <version>1.0-SNAPSHOT</version>
+  <modules>
+    <module>esaurus-service</module>
+  </modules>
+
+  <name>E-Saurus</name>
+
+  <properties>
+    <encoding>UTF-8</encoding>
+    <java.version>16</java.version>
+    <java.release>16</java.release>
+    <maven.min.version>3.6.0</maven.min.version>
+    <maven.compiler.source>${java.version}</maven.compiler.source>
+    <maven.compiler.target>${java.version}</maven.compiler.target>
+    <project.build.sourceEncoding>${encoding}</project.build.sourceEncoding>
+
+    <mainClass>NONE</mainClass>
+
+    <!-- compile deps -->
+    <jetbrains.annotations.version>20.1.0</jetbrains.annotations.version>
+    <asm.version>9.1</asm.version>
+
+    <vertx.version>4.1.0.Beta1</vertx.version>
+    <log4j.version>2.14.1</log4j.version>
+    <slf4j.version>2.0.0-alpha1</slf4j.version>
+
+    <!-- maven plugs -->
+    <plugin-clean.version>3.1.0</plugin-clean.version>
+    <plugin-compiler.version>3.8.1</plugin-compiler.version>
+    <plugin-deploy.version>3.0.0-M1</plugin-deploy.version>
+    <plugin-enforcer.version>3.0.0-M3</plugin-enforcer.version>
+    <plugin-github-release.version>1.4.0</plugin-github-release.version>
+    <plugin-install.version>3.0.0-M1</plugin-install.version>
+    <plugin-jar.version>3.2.0</plugin-jar.version>
+    <plugin-pmd.version>3.13.0</plugin-pmd.version>
+    <plugin-release.version>3.0.0-M1</plugin-release.version>
+    <plugin-resources.version>3.2.0</plugin-resources.version>
+    <plugin-site.version>3.9.1</plugin-site.version>
+    <plugin-surefire.version>3.0.0-M5</plugin-surefire.version>
+    <plugin-versions.version>2.8.1</plugin-versions.version>
+    <plugin-source.version>3.2.1</plugin-source.version>
+    <plugin-assembly.version>3.3.0</plugin-assembly.version>
+    <plugin-exec.version>3.0.0</plugin-exec.version>
+    <plugin-frontend.version>1.11.2</plugin-frontend.version>
+    <node.version>14.16.0</node.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <dependency>
+        <groupId>org.jetbrains</groupId>
+        <artifactId>annotations</artifactId>
+        <version>${jetbrains.annotations.version}</version>
+        <scope>compile</scope>
+      </dependency>
+
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-core</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>io.vertx</groupId>
+        <artifactId>vertx-web</artifactId>
+        <version>${vertx.version}</version>
+      </dependency>
+
+      <dependency>
+        <groupId>org.slf4j</groupId>
+        <artifactId>slf4j-api</artifactId>
+        <version>${slf4j.version}</version>
+      </dependency>
+      <dependency>
+        <groupId>org.apache.logging.log4j</groupId>
+        <artifactId>log4j-slf4j18-impl</artifactId>
+        <version>${log4j.version}</version>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <dependencies>
+    <dependency>
+      <groupId>org.jetbrains</groupId>
+      <artifactId>annotations</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.logging.log4j</groupId>
+      <artifactId>log4j-slf4j18-impl</artifactId>
+    </dependency>
+  </dependencies>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-enforcer-plugin</artifactId>
+          <version>${plugin-enforcer.version}</version>
+          <executions>
+            <execution>
+              <id>enforce-versions</id>
+              <goals>
+                <goal>enforce</goal>
+              </goals>
+              <configuration>
+                <rules>
+                  <requireMavenVersion>
+                    <version>${maven.min.version}</version>
+                  </requireMavenVersion>
+                </rules>
+              </configuration>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>${plugin-compiler.version}</version>
+          <configuration>
+            <compilerArgs>
+              <arg>--enable-preview</arg>
+              <!--              <arg>-Xlint:preview</arg>-->
+            </compilerArgs>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm</artifactId>
+              <version>${asm.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>${plugin-surefire.version}</version>
+          <configuration>
+            <argLine>--enable-preview</argLine>
+          </configuration>
+          <dependencies>
+            <dependency>
+              <groupId>org.ow2.asm</groupId>
+              <artifactId>asm</artifactId>
+              <version>${asm.version}</version>
+            </dependency>
+          </dependencies>
+        </plugin>
+
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-jar-plugin</artifactId>
+          <version>${plugin-jar.version}</version>
+        </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-source-plugin</artifactId>
+          <version>${plugin-source.version}</version>
+          <executions>
+            <execution>
+              <id>attach-sources</id>
+              <goals>
+                <goal>jar</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>versions-maven-plugin</artifactId>
+          <version>${plugin-versions.version}</version>
+          <executions>
+            <execution>
+              <id>versions</id>
+              <phase>test</phase>
+              <goals>
+                <goal>display-dependency-updates</goal>
+                <goal>display-plugin-updates</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <plugin>
+          <groupId>org.codehaus.mojo</groupId>
+          <artifactId>exec-maven-plugin</artifactId>
+          <version>${plugin-exec.version}</version>
+          <configuration>
+            <mainClass>${mainClass}</mainClass>
+          </configuration>
+        </plugin>
+
+        <plugin>
+          <groupId>com.github.eirslett</groupId>
+          <artifactId>frontend-maven-plugin</artifactId>
+          <version>${plugin-frontend.version}</version>
+          <configuration>
+            <nodeVersion>${node.version}</nodeVersion>
+          </configuration>
+        </plugin>
+
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-enforcer-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>versions-maven-plugin</artifactId>
+      </plugin>
+    </plugins>
+  </build>
+</project>
