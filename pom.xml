@@ -63,12 +63,12 @@
 
       <dependency>
         <groupId>io.vertx</groupId>
-        <artifactId>vertx-core</artifactId>
+        <artifactId>vertx-web</artifactId>
         <version>${vertx.version}</version>
       </dependency>
       <dependency>
         <groupId>io.vertx</groupId>
-        <artifactId>vertx-web</artifactId>
+        <artifactId>vertx-sql-client-templates</artifactId>
         <version>${vertx.version}</version>
       </dependency>
 
@@ -93,7 +93,7 @@
 
     <dependency>
       <groupId>io.vertx</groupId>
-      <artifactId>vertx-core</artifactId>
+      <artifactId>vertx-web</artifactId>
     </dependency>
     <dependency>
       <groupId>org.slf4j</groupId>

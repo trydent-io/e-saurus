@@ -1,4 +1,4 @@
-package io.esaurus.service.kernel;
+package io.esaurus.service.domain;
 
 import java.util.Optional;
 

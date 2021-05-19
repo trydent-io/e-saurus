@@ -1,6 +1,6 @@
 package io.esaurus.service.operation;
 
-import io.esaurus.service.kernel.Electricity;
+import io.esaurus.service.domain.Electricity;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
 
