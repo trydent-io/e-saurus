@@ -14,7 +14,7 @@ public interface Migration {
     return new Db(client);
   }
 
-  Future<TransactionLogs> transactionLogs(EventBus eventBus);
+  Future<Transactions> transactionLogs(EventBus eventBus);
 
   final class Db implements Migration {
     private static final String CREATE = """
@@ -34,11 +34,11 @@ public interface Migration {
     }
 
     @Override
-    public final Future<TransactionLogs> transactionLogs(final EventBus eventBus) {
+    public final Future<Transactions> transactionLogs(final EventBus eventBus) {
       return SqlTemplate
         .forUpdate(client, CREATE)
         .execute(Map.of())
-        .map(TransactionLogs.journal(client, eventBus));
+        .map(Transactions.journal(client, eventBus));
     }
   }
 }

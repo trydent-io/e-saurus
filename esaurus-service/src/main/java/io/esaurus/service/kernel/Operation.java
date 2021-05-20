@@ -2,6 +2,11 @@ package io.esaurus.service.kernel;
 
 import io.vertx.core.Future;
 
-import java.util.function.Function;
+import java.net.URI;
 
-public interface Operation extends Function<TransactionLogs, Future<Void>> {}
+public interface Operation {
+  Future<Void> apply(Transactions logs, URI model);
+  default Future<Void> apply(Transactions logs) {
+    return apply(logs, null);
+  }
+}

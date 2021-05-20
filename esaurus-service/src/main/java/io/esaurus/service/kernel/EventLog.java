@@ -9,38 +9,38 @@ import java.util.UUID;
 import static io.esaurus.service.kernel.Params.having;
 import static io.esaurus.service.kernel.Params.maybe;
 
-public record EventLog(UUID id, URI event, byte[] data, URI model, Instant timepoint) {
-  private static final String EMPTY = "";
+record EventLog(UUID id, URI event, URI model, byte[] data, Instant timepoint) {
+  public EventLog {
+    assert id != null && event != null && data != null && data.length > 0 && timepoint != null;
+  }
 
-  private static final String EVENT_URI = "event:%s:%s";
-  private static final String MODEL_URI = "model:%s:%d";
+  public EventLog(URI event, URI model, byte[] data) {
+    this(UUID.randomUUID(), event, model, data, Instant.now());
+  }
 
-  public EventLog { assert id != null && event != null && data != null && data.length > 0 && timepoint != null; }
+  public EventLog(URI event, byte[] data) {
+    this(event, null, data);
+  }
 
-  public EventLog(URI event, byte[] data, URI model) { this(UUID.randomUUID(), event, data, model, Instant.now()); }
-
-  public EventLog(URI event, byte[] data) { this(UUID.randomUUID(), event, data, null, Instant.now()); }
-
-  static Optional<EventLog> create(String eventName, byte[] data, long modelId, String modelName) {
-    return having(
-      maybe(eventName).map(it -> EVENT_URI.formatted(it, UUID.randomUUID().toString())),
-      maybe(data).filter(bytes -> bytes.length > 0),
-      maybe(modelName).map(it -> MODEL_URI.formatted(modelName, modelId)).or(() -> Optional.of(EMPTY)),
-      it -> it.third().equals(EMPTY)
-        ? new EventLog(URI.create(it.first()), it.second())
-        : new EventLog(URI.create(it.first()), it.second(), URI.create(it.third()))
-    );
+  static Optional<EventLog> create(URI event, URI model, byte[] datum) {
+    return
+      having(
+        maybe(event),
+        maybe(model).or(() -> Resource.empty().map(Resource::value)),
+        maybe(datum).filter(bytes -> bytes.length > 0),
+        it -> Resource.none().is(it.second())
+          ? new EventLog(it.first(), it.third())
+          : new EventLog(it.first(), it.second(), it.third())
+      );
   }
 
   public final Map<String, Object> asMap() {
-    return
-      Map.ofEntries(
-        Map.entry("id", id),
-        Map.entry("eventName", event.getAuthority()),
-        Map.entry("eventId", event.getPath()),
-        Map.entry("data", data),
-        Map.entry("modelName", model.getAuthority()),
-        Map.entry("modelId", model.getPort())
-      );
+    return Map.ofEntries(
+      Map.entry("id", id),
+      Map.entry("event", event.toString()),
+      Map.entry("model", model.toString()),
+      Map.entry("data", data),
+      Map.entry("timepoint", timepoint)
+    );
   }
 }

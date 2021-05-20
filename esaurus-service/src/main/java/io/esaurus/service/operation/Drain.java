@@ -2,7 +2,7 @@ package io.esaurus.service.operation;
 
 import io.esaurus.service.domain.Electricity;
 import io.esaurus.service.kernel.Operation;
-import io.esaurus.service.kernel.TransactionLogs;
+import io.esaurus.service.kernel.Transactions;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import org.jetbrains.annotations.Contract;
@@ -10,13 +10,14 @@ import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
 
 public interface Drain extends Operation {
 
   @Contract(value = "_, _ -> new", pure = true)
-  static @NotNull Drain of(Electricity electricity, Instant timepoint) {
+  static @NotNull Drain command(Electricity electricity, Instant timepoint) {
     return new Command(electricity, timepoint);
   }
 
@@ -32,8 +33,8 @@ public interface Drain extends Operation {
     }
 
     @Override
-    public Future<Void> apply(final TransactionLogs transactionLogs) {
-      return transactionLogs
+    public Future<Void> apply(Transactions logs, URI model) {
+      return logs
         .append(
           "electricity-drawn",
           Json.encode(
@@ -41,7 +42,8 @@ public interface Drain extends Operation {
               "electricity", electricity.value(),
               "at", timepoint
             )
-          ).getBytes()
+          ).getBytes(),
+          model
         )
         .commit()
         .onSuccess(ignored -> log.info("Drain command submitted"))
