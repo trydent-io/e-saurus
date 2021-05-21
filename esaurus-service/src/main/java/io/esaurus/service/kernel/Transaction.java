@@ -6,6 +6,10 @@ import io.vertx.core.eventbus.EventBus;
 import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.templates.SqlTemplate;
 
+import java.net.URI;
+import java.time.Instant;
+import java.util.UUID;
+
 import static io.vertx.core.buffer.Buffer.buffer;
 
 public interface Transaction {
