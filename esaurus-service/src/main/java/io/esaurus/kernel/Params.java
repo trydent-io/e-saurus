@@ -1,4 +1,4 @@
-package io.esaurus.service.kernel;
+package io.esaurus.kernel;
 
 import java.util.Optional;
 import java.util.function.Function;

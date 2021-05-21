@@ -1,4 +1,4 @@
-package io.esaurus.service.kernel;
+package io.esaurus.kernel;
 
 import io.vertx.core.json.Json;
 

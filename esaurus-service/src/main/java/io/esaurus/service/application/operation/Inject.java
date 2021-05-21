@@ -1,4 +1,4 @@
-package io.esaurus.service.operation;
+package io.esaurus.service.application.operation;
 
 import io.esaurus.service.domain.Electricity;
 import org.jetbrains.annotations.Contract;
@@ -6,14 +6,14 @@ import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 
-public interface Supply {
+public interface Inject {
 
   @Contract(value = "_, _ -> new", pure = true)
-  static @NotNull Supply of(Electricity electricity, Instant instant) {
+  static @NotNull Inject with(Electricity electricity, Instant instant) {
     return new Command(electricity, instant);
   }
 
-  final class Command implements Supply {
+  final class Command implements Inject {
     private final Electricity electricity;
     private final Instant when;
 
