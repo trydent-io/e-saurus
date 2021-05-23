@@ -3,12 +3,22 @@ package io.esaurus.service.presentation;
 import io.esaurus.service.application.operation.Drain;
 import io.esaurus.kernel.Resource;
 import io.esaurus.kernel.Transactions;
+import io.vertx.core.Future;
+import org.jetbrains.annotations.Contract;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.UUID;
 
 public interface HttpResource {
+
+  @Contract(value = "_, _ -> new", pure = true)
+  static @NotNull HttpResource electricity(Transactions transactions, Drain drain) {
+    return new Electricity(transactions, drain);
+  }
+
+  Future<Void> resolve(UUID correlationId);
 
   final class Electricity implements HttpResource {
     private static final Logger log = LoggerFactory.getLogger(Electricity.class);
@@ -18,13 +28,15 @@ public interface HttpResource {
     private final Transactions transactions;
     private final Drain drain;
 
-    public Electricity(final Transactions transactions, final Drain drain) {
+    @Contract(pure = true)
+    private Electricity(final Transactions transactions, final Drain drain) {
       this.transactions = transactions;
       this.drain = drain;
     }
 
-    public void resolve(UUID correlationId) {
-      Resource
+    @Override
+    public final Future<Void> resolve(UUID correlationId) {
+      return Resource
         .model(correlationId, MODEL_NAME)
         .map(transactions::aggregate)
         .map(drain::apply)

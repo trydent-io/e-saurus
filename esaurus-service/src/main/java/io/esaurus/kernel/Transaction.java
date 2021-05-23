@@ -4,10 +4,16 @@ import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.sqlclient.SqlClient;
 import io.vertx.sqlclient.templates.SqlTemplate;
+import org.jetbrains.annotations.NotNull;
 
+import java.time.Instant;
+import java.util.Iterator;
+import java.util.UUID;
+
+import static io.esaurus.kernel.Transaction.Entry;
 import static io.vertx.core.buffer.Buffer.buffer;
 
-public interface Transaction {
+public interface Transaction extends Iterable<Entry> {
   static Transaction append(SqlClient client, EventBus bus, EventLog log) {
     return new Log(client, bus, log);
   }
@@ -35,5 +41,13 @@ public interface Transaction {
         .onSuccess(ignored -> bus.publish(log.event().getAuthority(), buffer(log.data())))
         .onFailure(cause -> bus.publish(log.event().getAuthority() + "-failed", buffer(log.data())));
     }
+
+    @NotNull
+    @Override
+    public Iterator<Entry> iterator() {
+      return null;
+    }
   }
+
+  record Entry(String eventName, byte[] data, UUID modelId, String modelName, Instant persistedAt) {}
 }

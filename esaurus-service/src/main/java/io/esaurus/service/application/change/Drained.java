@@ -7,6 +7,8 @@ import io.esaurus.kernel.Transaction;
 import io.esaurus.kernel.Transactions;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.util.Map;
@@ -17,6 +19,8 @@ public sealed interface Drained extends Change {
   }
 
   final class Event implements Drained {
+    private static final Logger log = LoggerFactory.getLogger(Event.class);
+
     private final Electricity electricity;
     private final Instant drainedAt;
 
@@ -27,7 +31,9 @@ public sealed interface Drained extends Change {
 
     @Override
     public final Future<Void> apply(final Transactions transactions) {
-      return apply(transactions, "electricity-drained", asBytes());
+      return apply(transactions, "electricity-drained", asBytes())
+        .onSuccess(ignored -> log.info("Change {} committed", "drained"))
+        .onFailure(cause -> log.error("Can't commit change %s".formatted("drained"), cause));
     }
 
     private byte[] asBytes() {
