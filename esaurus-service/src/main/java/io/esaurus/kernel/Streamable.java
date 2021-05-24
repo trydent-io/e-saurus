@@ -5,5 +5,5 @@ import io.vertx.core.Future;
 import java.util.stream.Stream;
 
 public interface Streamable<R extends Record> {
-  Future<Stream<R>> asStream();
+  Future<Stream<R>> stream();
 }

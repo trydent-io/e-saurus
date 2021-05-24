@@ -3,11 +3,11 @@ package io.esaurus.kernel;
 import io.vertx.core.Future;
 import io.vertx.sqlclient.Row;
 import io.vertx.sqlclient.templates.RowMapper;
-import io.vertx.sqlclient.templates.SqlTemplate;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.Map;
 
 import static io.esaurus.kernel.Transaction.Entry;
 import static io.vertx.core.buffer.Buffer.buffer;
@@ -31,13 +31,13 @@ public interface Transaction extends Iterable<Entry> {
       }
     }
   }
-  static Transaction submitted(Database database, String eventName, byte[] data) {
-    return new Db(database, eventName, data);
+  static Transaction submit(Database database, String eventName, byte[] data) {
+    return new Submitted(database, eventName, data);
   }
 
   Future<Void> commit();
 
-  final class Db implements Transaction {
+  final class Submitted implements Transaction {
     private static final String INSERT = """
       insert into transactions(eventId, eventName, data)
       values (#{eventId}, #{eventName}, #{data})
@@ -47,7 +47,7 @@ public interface Transaction extends Iterable<Entry> {
     private final String eventName;
     private final byte[] data;
 
-    private Db(final Database database, final String eventName, final byte[] data) {
+    private Submitted(final Database database, final String eventName, final byte[] data) {
       this.database = database;
       this.eventName = eventName;
       this.data = data;
@@ -55,9 +55,8 @@ public interface Transaction extends Iterable<Entry> {
 
     @Override
     public Future<Void> commit() {
-      return database.insert(INSERT, )
-        .execute(log.asMap())
-        .<Void>mapEmpty()
+      return database.insert(INSERT, Map.of())
+        .compose(ignored -> database.select(SELECT, ))
         .onSuccess(ignored -> bus.publish(log.event().getAuthority(), buffer(log.data())))
         .onFailure(cause -> bus.publish(log.event().getAuthority() + "-failed", buffer(log.data())));
     }

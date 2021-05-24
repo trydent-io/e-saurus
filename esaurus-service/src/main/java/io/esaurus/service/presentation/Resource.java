@@ -2,7 +2,6 @@ package io.esaurus.service.presentation;
 
 import io.esaurus.kernel.Unity;
 import io.esaurus.service.application.operation.Drain;
-import io.esaurus.kernel.Transactions;
 import io.vertx.core.Future;
 import io.vertx.ext.web.RoutingContext;
 import org.jetbrains.annotations.Contract;

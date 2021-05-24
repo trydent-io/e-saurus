@@ -24,7 +24,7 @@ public sealed interface Model extends Streamable<Transaction.Entry> {
     }
   }
 
-  static Model from(Database database, long id, String name) {
+  static Model find(Database database, long id, String name) {
     return new Db(database, id, name);
   }
 
@@ -53,7 +53,7 @@ public sealed interface Model extends Streamable<Transaction.Entry> {
     public Future<Transaction> submit(final String event, final byte[] data) {
       return database
         .select(SELECT, Map.of("modelId", id, "modelName", name), Transaction.Entry.Selected.Entry)
-        .map(entries -> Transaction.submitted(database, event, data));
+        .map(entries -> Transaction.submit(database, event, data));
     }
   }
 }

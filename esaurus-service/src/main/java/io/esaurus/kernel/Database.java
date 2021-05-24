@@ -20,11 +20,11 @@ public sealed interface Database {
     return new Client(client, bus);
   }
 
-  default Future<Void> insert(String insert, Consumer<EventBus> dispatch) { return insert(insert, Map.of(), dispatch); }
-  default Future<Void> update(String update, Consumer<EventBus> dispatch) { return update(update, Map.of(), dispatch); }
+  default Future<Void> insert(String insert) { return insert(insert, Map.of()); }
+  default Future<Void> update(String update) { return update(update, Map.of()); }
 
-  Future<Void> insert(String insert, Map<String, Object> params, Consumer<EventBus> dispatch);
-  Future<Void> update(String update, Map<String, Object> params, Consumer<EventBus> dispatch);
+  Future<Void> insert(String insert, Map<String, Object> params);
+  Future<Void> update(String update, Map<String, Object> params);
   <R extends Record> Future<Stream<R>> select(String select, Map<String, Object> params, RowMapper<R> result);
 
   final class Client implements Database {
@@ -38,23 +38,22 @@ public sealed interface Database {
       this.bus = bus;
     }
 
-    private Future<Void> modify(String modify, Map<String, Object> params, Consumer<EventBus> dispatch) {
+    private Future<Void> modify(String modify, Map<String, Object> params) {
       return SqlTemplate.forUpdate(client, modify)
         .execute(params)
-        .<Void>mapEmpty()
-        .onSuccess(ignored -> dispatch.accept(bus));
+        .<Void>mapEmpty();
     }
 
     @Override
-    public Future<Void> insert(String insert, Map<String, Object> params, Consumer<EventBus> dispatch) {
-      return modify(insert, params, dispatch)
+    public Future<Void> insert(String insert, Map<String, Object> params) {
+      return modify(insert, params)
         .onSuccess(ignored -> log.info("Insert {} executed", insert))
         .onFailure(cause -> log.error("Can't execute insert %s".formatted(insert), cause));
     }
 
     @Override
-    public Future<Void> update(String update, Map<String, Object> params, Consumer<EventBus> dispatch) {
-      return modify(update, params, dispatch)
+    public Future<Void> update(String update, Map<String, Object> params) {
+      return modify(update, params)
         .onSuccess(ignored -> log.info("Update {} executed", update))
         .onFailure(cause -> log.error("Can't execute update %s".formatted(update), cause));
     }

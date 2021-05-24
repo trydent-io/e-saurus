@@ -2,7 +2,6 @@ package io.esaurus.service.application.operation;
 
 import io.esaurus.kernel.Model;
 import io.esaurus.kernel.Operation;
-import io.esaurus.kernel.Transactions;
 import io.esaurus.service.application.change.Drained;
 import io.esaurus.service.domain.Electricity;
 import io.vertx.core.Future;
@@ -12,7 +11,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.Comparator;
 import java.util.stream.Stream;
 
 public sealed interface Drain extends Operation<Drain.Command.Schema> {

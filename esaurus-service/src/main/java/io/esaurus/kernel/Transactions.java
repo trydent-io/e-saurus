@@ -12,7 +12,10 @@ public interface Transactions extends Streamable<Transaction.Entry> {
   }
 
   Model model(long id, String name);
-  default Model model(long id) { return model(id, null); }
+
+  default Model model(long id) {
+    return model(id, null);
+  }
 
   Transaction submit(String event, byte[] data);
 
@@ -30,16 +33,16 @@ public interface Transactions extends Streamable<Transaction.Entry> {
 
     @Override
     public Model model(final long id, final String name) {
-      return Model.from(database, id, name);
+      return Model.find(database, id, name);
     }
 
     @Override
     public Transaction submit(String event, byte[] data) {
-      return Transaction.from(this, event, data);
+      return Transaction.submit(database, event, data);
     }
 
     @Override
-    public Future<Stream<Transaction.Entry>> asStream() {
+    public Future<Stream<Transaction.Entry>> stream() {
       return database.select(SELECT, Map.of(), Transaction.Entry.Selected.Entry);
     }
   }

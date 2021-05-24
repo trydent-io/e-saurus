@@ -2,7 +2,6 @@ package io.esaurus.service.application.change;
 
 import io.esaurus.service.domain.Electricity;
 import io.esaurus.kernel.Change;
-import io.esaurus.kernel.Transactions;
 import io.vertx.core.Future;
 import io.vertx.core.json.Json;
 import org.slf4j.Logger;
