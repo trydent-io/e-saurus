@@ -1,41 +1,61 @@
 package io.esaurus.kernel;
 
 import io.vertx.core.Future;
-import io.vertx.core.eventbus.EventBus;
-import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.Row;
+import io.vertx.sqlclient.templates.RowMapper;
 import io.vertx.sqlclient.templates.SqlTemplate;
 import org.jetbrains.annotations.NotNull;
 
 import java.time.Instant;
 import java.util.Iterator;
-import java.util.UUID;
 
 import static io.esaurus.kernel.Transaction.Entry;
 import static io.vertx.core.buffer.Buffer.buffer;
+import static java.time.ZoneOffset.UTC;
 
 public interface Transaction extends Iterable<Entry> {
-  static Transaction append(SqlClient client, EventBus bus, EventLog log) {
-    return new Log(client, bus, log);
+  record Entry(long eventId, String eventName, byte[] data, long modelId, String modelName, Instant persistedAt) {
+    public enum Selected implements RowMapper<Entry> {
+      Entry;
+
+      @Override
+      public Entry map(final Row row) {
+        return new Entry(
+          row.getLong("eventId"),
+          row.getString("eventName"),
+          row.getBuffer("data").getBytes(),
+          row.getLong("modelId"),
+          row.getString("modelName"),
+          row.getLocalDateTime("persistedAt").toInstant(UTC)
+        );
+      }
+    }
+  }
+  static Transaction submitted(Database database, String eventName, byte[] data) {
+    return new Db(database, eventName, data);
   }
 
   Future<Void> commit();
 
-  final class Log implements Transaction {
-    private static final String INSERT = "insert into transactions(event, model, data) values (#{event}, #{model}, #{data})";
+  final class Db implements Transaction {
+    private static final String INSERT = """
+      insert into transactions(eventId, eventName, data)
+      values (#{eventId}, #{eventName}, #{data})
+      """;
 
-    private final SqlClient client;
-    private final EventBus bus;
-    private final EventLog log;
+    private final Database database;
+    private final String eventName;
+    private final byte[] data;
 
-    private Log(final SqlClient client, final EventBus bus, final EventLog log) {
-      this.client = client;
-      this.bus = bus;
-      this.log = log;
+    private Db(final Database database, final String eventName, final byte[] data) {
+      this.database = database;
+      this.eventName = eventName;
+      this.data = data;
     }
 
     @Override
     public Future<Void> commit() {
-      return SqlTemplate.forUpdate(client, INSERT)
+      return database.insert(INSERT, )
         .execute(log.asMap())
         .<Void>mapEmpty()
         .onSuccess(ignored -> bus.publish(log.event().getAuthority(), buffer(log.data())))
@@ -48,6 +68,4 @@ public interface Transaction extends Iterable<Entry> {
       return null;
     }
   }
-
-  record Entry(String eventName, byte[] data, UUID modelId, String modelName, Instant persistedAt) {}
 }

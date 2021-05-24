@@ -5,30 +5,30 @@ import java.net.URISyntaxException;
 import java.util.Optional;
 import java.util.UUID;
 
-public record Resource(URI value) {
-  public Resource { assert value != null; }
+public record Unity(URI value) {
+  public Unity { assert value != null; }
 
   public boolean is(URI value) {
     return this.value.equals(value);
   }
 
-  public static Optional<Resource> model(final UUID id, final String name) {
+  public static Optional<Unity> model(final UUID id, final String name) {
     return resource("model", id, name);
   }
 
-  public static Optional<Resource> event(final String name) {
+  public static Optional<Unity> event(final String name) {
     return resource("event", UUID.randomUUID(), name);
   }
 
-  public static Resource none() {
-    return new Resource(URI.create("empty:none"));
+  public static Unity none() {
+    return new Unity(URI.create("empty:none"));
   }
 
-  public static Optional<Resource> empty() {
+  public static Optional<Unity> empty() {
     return Optional.of(none());
   }
 
-  private static Optional<Resource> resource(final String resource, final UUID id, final String name) {
+  private static Optional<Unity> resource(final String resource, final UUID id, final String name) {
     return Optional.ofNullable(name)
       .map(it -> {
         try {
@@ -37,6 +37,6 @@ public record Resource(URI value) {
           return null;
         }
       })
-      .map(Resource::new);
+      .map(Unity::new);
   }
 }

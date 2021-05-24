@@ -3,12 +3,17 @@ package io.esaurus.kernel;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.sqlclient.SqlClient;
+import io.vertx.sqlclient.templates.RowMapper;
 import io.vertx.sqlclient.templates.SqlTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
+
+import static java.util.stream.StreamSupport.stream;
 
 public sealed interface Database {
   static Database client(SqlClient client, EventBus bus) {
@@ -20,7 +25,7 @@ public sealed interface Database {
 
   Future<Void> insert(String insert, Map<String, Object> params, Consumer<EventBus> dispatch);
   Future<Void> update(String update, Map<String, Object> params, Consumer<EventBus> dispatch);
-  <R extends Record> Future<Iterable<R>> select(String select, Map<String, Object> params, Class<R> result);
+  <R extends Record> Future<Stream<R>> select(String select, Map<String, Object> params, RowMapper<R> result);
 
   final class Client implements Database {
     private static final Logger log = LoggerFactory.getLogger(Client.class);
@@ -55,11 +60,11 @@ public sealed interface Database {
     }
 
     @Override
-    public <R extends Record> Future<Iterable<R>> select(String select, Map<String, Object> params, Class<R> result) {
+    public <R extends Record> Future<Stream<R>> select(String select, Map<String, Object> params, RowMapper<R> result) {
       return SqlTemplate.forQuery(client, select)
         .mapTo(result)
         .execute(params)
-        .map(rows -> rows);
+        .map(rows -> stream(rows.spliterator(), false));
     }
   }
 }

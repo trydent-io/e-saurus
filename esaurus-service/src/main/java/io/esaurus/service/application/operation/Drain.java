@@ -1,10 +1,10 @@
 package io.esaurus.service.application.operation;
 
+import io.esaurus.kernel.Model;
+import io.esaurus.kernel.Operation;
+import io.esaurus.kernel.Transactions;
 import io.esaurus.service.application.change.Drained;
 import io.esaurus.service.domain.Electricity;
-import io.esaurus.kernel.Operation;
-import io.esaurus.kernel.Resource;
-import io.esaurus.kernel.Transactions;
 import io.vertx.core.Future;
 import org.jetbrains.annotations.Contract;
 import org.jetbrains.annotations.NotNull;
@@ -12,24 +12,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.util.Comparator;
+import java.util.stream.Stream;
 
-public sealed interface Drain extends Operation {
+public sealed interface Drain extends Operation<Drain.Command.Schema> {
 
-  @Contract(value = "_, _ -> new", pure = true)
-  static @NotNull Drain command(Electricity electricity, Instant timepoint) {
-    return new Command(electricity, timepoint);
+  @Contract(value = "_ -> new", pure = true)
+  static @NotNull Drain command(Stream<Model.PastEvent> history) {
+    return new Command(history);
   }
 
   final class Command implements Drain {
     private static final Logger log = LoggerFactory.getLogger(Drain.class);
 
-    private final Electricity electricity;
-    private final Instant timepoint;
+    private final Stream<Model.PastEvent> events;
 
-    private Command(final Electricity electricity, final Instant timepoint) {
-      this.electricity = electricity;
-      this.timepoint = timepoint;
+    public Command(final Stream<Model.PastEvent> events) {this.events = events;}
+
+    @Override
+    public Future<Void> apply(final Schema schema) {
+      return events.count() > 0 ? ;
     }
+
+    private record Schema(Electricity electricity, Instant timepoint) {}
 
     @Override
     public Future<Void> apply(Transactions transactions) {
@@ -40,4 +45,5 @@ public sealed interface Drain extends Operation {
         .onFailure(cause -> log.error("Can't submit drain command", cause));
     }
   }
+
 }

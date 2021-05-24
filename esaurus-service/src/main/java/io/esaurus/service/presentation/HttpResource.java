@@ -1,48 +1,28 @@
 package io.esaurus.service.presentation;
 
-import io.esaurus.service.application.operation.Drain;
-import io.esaurus.kernel.Resource;
-import io.esaurus.kernel.Transactions;
-import io.vertx.core.Future;
-import org.jetbrains.annotations.Contract;
-import org.jetbrains.annotations.NotNull;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.vertx.core.Handler;
+import io.vertx.core.eventbus.DeliveryOptions;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.http.impl.headers.HeadersMultiMap;
+import io.vertx.ext.web.RoutingContext;
 
-import java.util.UUID;
-
-public interface HttpResource {
-
-  @Contract(value = "_, _ -> new", pure = true)
-  static @NotNull HttpResource electricity(Transactions transactions, Drain drain) {
-    return new Electricity(transactions, drain);
-  }
-
-  Future<Void> resolve(UUID correlationId);
+public interface HttpResource extends Handler<RoutingContext> {
 
   final class Electricity implements HttpResource {
-    private static final Logger log = LoggerFactory.getLogger(Electricity.class);
-
-    private static final String MODEL_NAME = "electricity";
-
-    private final Transactions transactions;
-    private final Drain drain;
-
-    @Contract(pure = true)
-    private Electricity(final Transactions transactions, final Drain drain) {
-      this.transactions = transactions;
-      this.drain = drain;
-    }
+    private final EventBus bus;
+    private final Resources resources;
 
     @Override
-    public final Future<Void> resolve(UUID correlationId) {
-      return Resource
-        .model(correlationId, MODEL_NAME)
-        .map(transactions::aggregate)
-        .map(drain::apply)
-        .orElseThrow()
-        .onSuccess(ignored -> log.info("Send drain-command on model {}", MODEL_NAME))
-        .onFailure(cause -> log.error("Can't send drain-command on model %s".formatted(MODEL_NAME), cause));
+    public void handle(final RoutingContext resource) {
+      resource.request().handler(buffer -> bus.publish(address(resource), buffer.toJsonObject(), headers(resource)));
+    }
+
+    private DeliveryOptions headers(final RoutingContext resource) {
+      return new DeliveryOptions().setHeaders(new HeadersMultiMap().add("resource-id", resource.pathParam("id")));
+    }
+
+    private String address(final RoutingContext resource) {
+      return "%s-%s".formatted(resource.pathParam("resource"), resource.pathParam("command"));
     }
   }
 }

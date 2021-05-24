@@ -7,9 +7,9 @@ public interface Change {
   Future<Void> apply(Transactions transactions);
 
   default Future<Void> apply(Transactions transactions, String name, byte[] data) {
-    return Resource
+    return Unity
       .event(name)
-      .map(resource -> transactions.append(resource, data))
+      .map(resource -> transactions.submit(resource, data))
       .map(Transaction::commit)
       .orElseThrow(() -> new IllegalStateException("Can't commit change %s".formatted(name)));
   }

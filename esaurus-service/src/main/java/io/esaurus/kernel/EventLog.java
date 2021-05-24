@@ -25,9 +25,9 @@ record EventLog(UUID id, URI event, URI model, byte[] data, Instant timepoint) {
   static Optional<EventLog> create(URI event, URI model, byte[] datum) {
     return having(
       maybe(event),
-      maybe(model).or(() -> Resource.empty().map(Resource::value)),
+      maybe(model).or(() -> Unity.empty().map(Unity::value)),
       maybe(datum).filter(bytes -> bytes.length > 0),
-      it -> Resource.none().is(it.second())
+      it -> Unity.none().is(it.second())
         ? new EventLog(it.first(), it.third())
         : new EventLog(it.first(), it.second(), it.third())
     );
