@@ -5,6 +5,8 @@ import io.vertx.core.Future;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import static io.esaurus.kernel.Transaction.Entry.EntryFrom;
+
 public interface Transactions extends Streamable<Transaction.Entry> {
 
   static Transactions from(Database database) {
@@ -33,17 +35,17 @@ public interface Transactions extends Streamable<Transaction.Entry> {
 
     @Override
     public Model model(final long id, final String name) {
-      return Model.find(database, id, name);
+      return Model.create(database, id, name);
     }
 
     @Override
     public Transaction submit(String event, byte[] data) {
-      return Transaction.submit(database, event, data);
+      return Transaction.create(database, event, data);
     }
 
     @Override
     public Future<Stream<Transaction.Entry>> stream() {
-      return database.select(SELECT, Map.of(), Transaction.Entry.Selected.Entry);
+      return database.select(SELECT, Map.of(), EntryFrom.Row);
     }
   }
 }

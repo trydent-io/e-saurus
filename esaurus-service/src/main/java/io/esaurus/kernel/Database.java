@@ -8,51 +8,49 @@ import io.vertx.sqlclient.templates.SqlTemplate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
 import java.util.Map;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static io.vertx.core.buffer.Buffer.buffer;
 import static java.util.stream.StreamSupport.stream;
 
 public sealed interface Database {
   static Database client(SqlClient client, EventBus bus) {
-    return new Client(client, bus);
+    return new Client(client, Outbox.event(bus));
   }
 
-  default Future<Void> insert(String insert) { return insert(insert, Map.of()); }
-  default Future<Void> update(String update) { return update(update, Map.of()); }
+  Future<Outbox> insert(String insert, Map<String, Object> params);
 
-  Future<Void> insert(String insert, Map<String, Object> params);
-  Future<Void> update(String update, Map<String, Object> params);
+  Future<Outbox> update(String update, Map<String, Object> params);
+
   <R extends Record> Future<Stream<R>> select(String select, Map<String, Object> params, RowMapper<R> result);
 
   final class Client implements Database {
     private static final Logger log = LoggerFactory.getLogger(Client.class);
 
     private final SqlClient client;
-    private final EventBus bus;
+    private final Outbox outbox;
 
-    private Client(final SqlClient client, final EventBus bus) {
+    public Client(final SqlClient client, final Outbox outbox) {
       this.client = client;
-      this.bus = bus;
+      this.outbox = outbox;
     }
 
-    private Future<Void> modify(String modify, Map<String, Object> params) {
+    private Future<Outbox> modify(String modify, Map<String, Object> params) {
       return SqlTemplate.forUpdate(client, modify)
         .execute(params)
-        .<Void>mapEmpty();
+        .map(outbox);
     }
 
     @Override
-    public Future<Void> insert(String insert, Map<String, Object> params) {
+    public Future<Outbox> insert(String insert, Map<String, Object> params) {
       return modify(insert, params)
         .onSuccess(ignored -> log.info("Insert {} executed", insert))
         .onFailure(cause -> log.error("Can't execute insert %s".formatted(insert), cause));
     }
 
     @Override
-    public Future<Void> update(String update, Map<String, Object> params) {
+    public Future<Outbox> update(String update, Map<String, Object> params) {
       return modify(update, params)
         .onSuccess(ignored -> log.info("Update {} executed", update))
         .onFailure(cause -> log.error("Can't execute update %s".formatted(update), cause));
@@ -66,4 +64,5 @@ public sealed interface Database {
         .map(rows -> stream(rows.spliterator(), false));
     }
   }
+
 }

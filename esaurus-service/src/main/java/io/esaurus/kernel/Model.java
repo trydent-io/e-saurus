@@ -1,38 +1,25 @@
 package io.esaurus.kernel;
 
 import io.vertx.core.Future;
-import io.vertx.core.json.JsonObject;
-import io.vertx.sqlclient.Row;
-import io.vertx.sqlclient.templates.RowMapper;
 
 import java.util.Map;
-import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import static io.esaurus.kernel.Transaction.Entry.EntryFrom;
+
 public sealed interface Model extends Streamable<Transaction.Entry> {
-  record PastEvent(String event, JsonObject data) {
-    public enum Selected implements RowMapper<PastEvent> {
-      Entry;
 
-      @Override
-      public PastEvent map(final Row row) {
-        return new PastEvent(
-          row.getString("event_name"),
-          row.getBuffer("data").toJsonObject()
-        );
-      }
-    }
-  }
-
-  static Model find(Database database, long id, String name) {
+  static Model create(Database database, long id, String name) {
     return new Db(database, id, name);
   }
 
-  Future<Transaction> submit(Function<? super Stream<PastEvent>, ? extends Operation> operations);
+  Model claim(Predicate<Stream<Transaction.Entry>> assertion);
+  Transaction submit(final String event, final byte[] data);
 
   final class Db implements Model {
     private static final String SELECT = """
-      select  event_name, data
+      select  event_id, event_name, data, model_id, model_name
       from    transactions
       where   model_id = #{modelId}
         and   (#{modelName} is null or model_name = #{modelName})
@@ -50,10 +37,43 @@ public sealed interface Model extends Streamable<Transaction.Entry> {
     }
 
     @Override
-    public Future<Transaction> submit(final String event, final byte[] data) {
-      return database
-        .select(SELECT, Map.of("modelId", id, "modelName", name), Transaction.Entry.Selected.Entry)
-        .map(entries -> Transaction.submit(database, event, data));
+    public Model claim(final Predicate<Stream<Transaction.Entry>> assertion) {
+      return null;
+    }
+
+    @Override
+    public Transaction submit(final String event, final byte[] data) {
+      return Transaction.create(database, event, data, id, name);
+    }
+
+    @Override
+    public Future<Stream<Transaction.Entry>> stream() {
+      return database.select(SELECT, Map.of("modelId", id, "modelName", name), EntryFrom.Row);
+    }
+  }
+
+  final class Claimed implements Model {
+    private final Model model;
+    private final Predicate<Stream<Transaction.Entry>> assertion;
+
+    public Claimed(final Model model, final Predicate<Stream<Transaction.Entry>> assertion) {
+      this.model = model;
+      this.assertion = assertion;
+    }
+
+    @Override
+    public Model claim(final Predicate<Stream<Transaction.Entry>> assertion) {
+      return new Claimed(this, assertion);
+    }
+
+    @Override
+    public Transaction submit(final String event, final byte[] data) {
+      return new Transaction.Asserted(model, model.submit(event, data), assertion);
+    }
+
+    @Override
+    public Future<Stream<Transaction.Entry>> stream() {
+      return model.stream();
     }
   }
 }
