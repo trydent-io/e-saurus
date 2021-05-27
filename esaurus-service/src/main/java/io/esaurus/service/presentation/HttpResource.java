@@ -1,15 +1,10 @@
 package io.esaurus.service.presentation;
 
-import io.esaurus.kernel.Transaction;
 import io.esaurus.kernel.Transaction.Entry;
 import io.esaurus.kernel.Transactions;
 import io.vertx.core.Handler;
-import io.vertx.core.eventbus.DeliveryOptions;
-import io.vertx.core.http.impl.headers.HeadersMultiMap;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-
-import java.util.Comparator;
 
 import static java.util.Comparator.comparing;
 
