@@ -4,20 +4,20 @@ import io.esaurus.kernel.Fact;
 import io.esaurus.kernel.Outbox;
 import io.esaurus.service.domain.Electricity;
 import io.vertx.core.Future;
-import io.vertx.core.json.Json;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
-import java.util.Map;
+
+import static io.vertx.core.Future.succeededFuture;
 
 public sealed interface Drained extends Fact<Drained.Event.Schema> {
   static Drained event(Outbox outbox) {
     return new Event(outbox);
   }
 
-  default void apply(final Electricity electricity, final Instant drainedAt) {
-    apply(new Event.Schema(electricity, drainedAt));
+  default Future<Void> apply(final Electricity electricity, final Instant drainedAt) {
+    return apply(new Event.Schema(electricity, drainedAt));
   }
 
   final class Event implements Drained {
@@ -30,19 +30,11 @@ public sealed interface Drained extends Fact<Drained.Event.Schema> {
     }
 
     @Override
-    public final void apply(final Schema schema) {
-      return outbox.dispatch("electricity-drained", asBytes(schema));
-    }
-
-    private byte[] asBytes(Schema schema) {
-      return Json
-        .encode(
-          Map.of(
-            "electricity", schema.electricity.value(),
-            "drainedAt", schema.drainedAt
-          )
-        )
-        .getBytes();
+    public final Future<Void> apply(final Schema schema) {
+      return succeededFuture(outbox.dispatch("electricity-drained", schema))
+        .<Void>mapEmpty()
+        .onSuccess(ignored -> log.info("Electricity drained dispatched"))
+        .onFailure(cause -> log.error("Can't dispatch electricity drained", cause));
     }
 
     private record Schema(Electricity electricity, Instant drainedAt) {}

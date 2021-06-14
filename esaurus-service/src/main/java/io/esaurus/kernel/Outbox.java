@@ -4,6 +4,9 @@ import io.vertx.core.buffer.Buffer;
 import io.vertx.core.eventbus.EventBus;
 import io.vertx.core.json.JsonObject;
 
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.RecordComponent;
+
 import static io.vertx.core.buffer.Buffer.buffer;
 
 public interface Outbox {
@@ -12,11 +15,17 @@ public interface Outbox {
   }
 
   default <R extends Record> Outbox dispatch(String event, R data) {
-    return dispatch(event, JsonObject.mapFrom(data).toBuffer());
-  }
+    final var json = new JsonObject();
 
-  default Outbox dispatch(String event, byte[] data) {
-    return dispatch(event, buffer(data));
+    for (final var component : data.getClass().getRecordComponents()) {
+      try {
+        json.put(component.getName(), component.getAccessor().invoke(data));
+      } catch (IllegalAccessException | InvocationTargetException e) {
+        e.printStackTrace();
+      }
+    }
+
+    return dispatch(event, json.toBuffer());
   }
 
   Outbox dispatch(String event, Buffer data);
